@@ -1,0 +1,9 @@
+language: java
+dist: trusty
+addons:
+  hostname: short-hostname
+jdk:
+  - oraclejdk7
+  - oraclejdk8
+notifications:
+  email: false
