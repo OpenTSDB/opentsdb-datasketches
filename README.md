@@ -5,7 +5,7 @@
       \___/| .__/ \___|_| |_|_| |____/|____/|____/
            |_|    The modern time series database.
 
-[![Build Status](https://travis-ci.org/OpenTSDB/opentsdb-datasketches.svg?branch=master)](https://travis-ci.org/OpenTSDB/opentsdb-datasketches) 
+[![Build Status](https://travis-ci.org/OpenTSDB/opentsdb-datasketches.svg?branch=master)](https://travis-ci.org/OpenTSDB/opentsdb-datasketches) [![Coverage Status](https://coveralls.io/repos/github/OpenTSDB/opentsdb-datasketches/badge.svg?branch=master)](https://coveralls.io/github/OpenTSDB/opentsdb-datasketches?branch=master)
 
 # DataSketches
 
