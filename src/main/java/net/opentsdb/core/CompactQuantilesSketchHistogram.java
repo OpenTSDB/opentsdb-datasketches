@@ -38,10 +38,7 @@ public class CompactQuantilesSketchHistogram implements Histogram {
   private final int id;
   
   /** The sketch for this data point. */
-  private CompactDoublesSketch sketch;
-  
-  /** If downsampling or grouping was called for, this is set with the sum. */
-  private DoublesUnion union;
+  private DoublesUnion sketch;
   
   /**
    * Default ctor.
@@ -59,7 +56,7 @@ public class CompactQuantilesSketchHistogram implements Histogram {
     if (sketch == null) {
       throw new IllegalStateException("The sketch has not been set yet.");
     }
-    final byte[] encoded = sketch.toByteArray(true);
+    final byte[] encoded = sketch.getResult().toByteArray(true);
     if (include_id) {
       final byte[] with_id = new byte[encoded.length + 1];
       with_id[0] = (byte) id;
@@ -84,13 +81,13 @@ public class CompactQuantilesSketchHistogram implements Histogram {
     } else {
       encoded = raw;
     }
-    sketch = CompactDoublesSketch.heapify(new NativeMemory(encoded));
+    sketch = DoublesUnion.builder()
+        .heapify(new NativeMemory(encoded));
   }
 
   public double percentile(double p) {
     // sketches expect percentiles to be < 1. e.g. 0.95 == 95%.
-    return union != null ? union.getResult().getQuantile(p / 100) : 
-      sketch.getQuantile(p / 100);
+    return sketch.getResult().getQuantile(p / 100);
   }
 
   public List<Double> percentiles(List<Double> p) {
@@ -99,9 +96,7 @@ public class CompactQuantilesSketchHistogram implements Histogram {
     for (int i = 0; i < p.size(); i++) {
       percentiles[i] = p.get(i) / 100;
     }
-    final double[] results = union != null ? 
-        union.getResult().getQuantiles(percentiles) : 
-          sketch.getQuantiles(percentiles);
+    final double[] results = sketch.getResult().getQuantiles(percentiles);
     final List<Double> response = Lists.newArrayListWithCapacity(results.length);
     for (final double result : results) {
       response.add(result);
@@ -133,11 +128,7 @@ public class CompactQuantilesSketchHistogram implements Histogram {
       throw new IllegalArgumentException("Incoming histogram was not of the "
           + "same type: " + histo.getClass());
     }
-    if (union == null) {
-      union = DoublesUnion.builder().build();
-      union.update(sketch);
-    }
-    union.update(((CompactQuantilesSketchHistogram) histo).sketch);
+    sketch.update(((CompactQuantilesSketchHistogram) histo).sketch.getResult());
   }
 
   public void aggregate(final List<Histogram> histos, 
@@ -146,16 +137,12 @@ public class CompactQuantilesSketchHistogram implements Histogram {
       throw new UnsupportedOperationException("Function " + func 
           + " is not supported yet."); 
     }
-    if (union == null) {
-      union = DoublesUnion.builder().build();
-      union.update(sketch);
-    }
     for (final Histogram histogram : histos) {
       if (!(histogram instanceof CompactQuantilesSketchHistogram)) {
         throw new IllegalArgumentException("Incoming histogram was not of the "
             + "same type: " + histogram.getClass());
       }
-      union.update(((CompactQuantilesSketchHistogram) histogram).sketch);
+      sketch.update(((CompactQuantilesSketchHistogram) histogram).sketch.getResult());
     }
   }
 
@@ -164,12 +151,12 @@ public class CompactQuantilesSketchHistogram implements Histogram {
    * union if present.
    */
   public void setSketch(final CompactDoublesSketch sketch) {
-    this.sketch = sketch;
-    union = null;
+    this.sketch = DoublesUnion.builder()
+        .build(sketch);
   }
   
   /** @return The sketch associated with this histogram. */
-  public CompactDoublesSketch getSketch() {
+  public DoublesUnion getSketch() {
     return sketch;
   }
 }

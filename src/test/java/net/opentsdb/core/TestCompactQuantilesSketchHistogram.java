@@ -68,12 +68,6 @@ public class TestCompactQuantilesSketchHistogram {
     byte[] raw = new byte[with_id.length - 1];
     System.arraycopy(with_id, 1, raw, 0, with_id.length - 1);
     assertArrayEquals(sketch.compact().toByteArray(), raw);
-    
-    histo.setSketch(null);
-    try {
-      histo.histogram(false);
-      fail("Expected IllegalStateException");
-    } catch (IllegalStateException e) { }
   }
 
   @Test
@@ -244,4 +238,5 @@ public class TestCompactQuantilesSketchHistogram {
       fail("Expected IllegalArgumentException");
     } catch (IllegalArgumentException e) { }
   }
+
 }
