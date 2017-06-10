@@ -12,13 +12,17 @@
 // see <http://www.gnu.org/licenses/>.
 package net.opentsdb.core;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.yahoo.memory.AllocMemory;
+import com.yahoo.memory.MemoryUtil;
 import com.yahoo.memory.NativeMemory;
 import com.yahoo.sketches.quantiles.CompactDoublesSketch;
 import com.yahoo.sketches.quantiles.DoublesUnion;
+import com.yahoo.sketches.quantiles.DoublesUnionBuilder;
 
 import net.opentsdb.core.Histogram;
 import net.opentsdb.core.HistogramAggregation;
@@ -81,8 +85,9 @@ public class CompactQuantilesSketchHistogram implements Histogram {
     } else {
       encoded = raw;
     }
-    sketch = DoublesUnion.builder()
-        .heapify(new NativeMemory(encoded));
+    sketch = DoublesUnion.builder().build();
+    sketch.update(CompactDoublesSketch.wrap(AllocMemory.wrap(
+        ByteBuffer.wrap(encoded))));
   }
 
   public double percentile(double p) {
